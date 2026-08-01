@@ -1,68 +1,53 @@
-# Perplexity Clone — Assignment Submission
+# Perplexity Clone
 
-## What's here
+A Perplexity-style AI search engine built with TypeScript and LangChain (plain Runnable composition, no LangGraph). It takes a user's question, searches the web through a self-hosted SearXNG instance, reranks results by embedding similarity, and streams back a cited, AI-generated answer.
 
-```
-utils/handleStream.ts              shared streaming contract (section 0.1)
-utils/formatHistory.ts             chat_history -> string (referenced by given code, not provided)
-utils/computeSimilarity.ts         cosine similarity (referenced by given code, not provided)
-lib/searxng.ts                     searxng client (referenced by given code, not provided)
-lib/outputParsers/listLineOutputParser.ts   <suggestions> XML parser (section 4)
-agents/academicSearchAgent.ts      GIVEN reference — only handleStream import changed
-agents/imageSearchAgent.ts         GIVEN reference — reconstructed from section 2.1 pseudocode
-agents/redditSearchAgent.ts        BUILT — Group A
-agents/webSearchAgent.ts           BUILT — Group A
-agents/youtubeSearchAgent.ts       BUILT — Group A
-agents/videoSearchAgent.ts         BUILT — Group B
-agents/writingAssistantAgent.ts    BUILT
-agents/suggestionGeneratorAgent.ts BUILT
-dispatch.ts                        focusMode -> handler lookup (Integration checklist)
-```
+## Agents
+
+| Agent | Type | What it does |
+|---|---|---|
+| `webSearchAgent` | Streamed | General web search with cited answers |
+| `academicSearchAgent` | Streamed | Search focused on academic/research sources |
+| `redditSearchAgent` | Streamed | Search focused on Reddit discussions |
+| `youtubeSearchAgent` | Streamed | Search focused on YouTube content |
+| `writingAssistantAgent` | Streamed | Writing/editing help, no web search |
+| `imageSearchAgent` | List (no streaming) | Returns a list of relevant images |
+| `videoSearchAgent` | List (no streaming) | Returns a list of relevant videos |
+| `suggestionGeneratorAgent` | List (no streaming) | Generates 4-5 follow-up question suggestions |
+
+## Tech Stack
+
+- **Language:** TypeScript (Node.js, ESM)
+- **LLM:** Groq (`llama-3.3-70b-versatile`) via the OpenAI-compatible API
+- **Embeddings:** Google Gemini (`gemini-embedding-001`)
+- **Search:** SearXNG (self-hosted, run via Docker)
+- **Orchestration:** LangChain (`@langchain/core`) — `RunnableSequence`, `RunnableMap`, `RunnableLambda`, `.streamEvents()`
+- **Server:** Express
+
+## Setup
+
+1. `npm install`
+2. `cp .env.example .env` and fill in your own `GROQ_API_KEY` and `GEMINI_API_KEY`
+3. Run SearXNG: `docker run -d --name searxng -p 8080:8080 searxng/searxng`
+4. Enable JSON output in SearXNG's settings (copy `settings.yml` out, add `limiter: false` and `formats: [html, json]` under `search:`, copy back, `docker restart searxng`)
+
+## Running
+
+- Quick single-agent test: `npx tsx src/test.ts`
+- Start the server: `npx tsx src/server.ts`, then `curl http://localhost:3000/health`
 
 ## Section 1.3 — sort-direction audit
 
-To keep the **most similar** docs after `.filter(sim => sim.similarity > 0.5).slice(0, 15)`,
-the array must be sorted **descending** by similarity (`(a, b) => b.similarity - a.similarity`)
-*before* the filter/slice — otherwise slicing the first 15 keeps the docs closest to the
-0.5 cutoff (i.e. the *least* similar of the qualifying set), not the best matches.
+To keep the **most similar** docs after `.filter(sim => sim.similarity > 0.5).slice(0, 15)`, the array must be sorted **descending** by similarity. The given `academicSearchAgent.ts` reference sorts ascending — this bug was left unchanged there (per the assignment's instruction not to silently fix the given file) but fixed in `redditSearchAgent.ts`, `webSearchAgent.ts`, and `youtubeSearchAgent.ts`.
 
-**The given `academicSearchAgent.ts` has this bug**: its `rerankDocs` sorts ascending
-(`(a, b) => a.similarity - b.similarity`). Per the assignment instructions, this was
-**left unchanged** in `agents/academicSearchAgent.ts` and only flagged here (not
-silently fixed). It **was fixed** (sort direction reversed) in `redditSearchAgent.ts`,
-`webSearchAgent.ts`, and `youtubeSearchAgent.ts`, with an inline comment at each fix site.
+## Testing Results
 
-## Assumptions about ungiven code
+Manually tested via `src/test.ts`:
+- `webSearchAgent`: returned 15 sources and a streamed, cited answer for "What is React?"
+- `writingAssistantAgent`: returned a streamed response with no search, for a writing prompt
+- `imageSearchAgent`: tested via the running server's `/api/list` endpoint, returned 10 real image results for "cats"
+- Server health check (`/health`) and `/api/list` both confirmed working with real HTTP requests
 
-`academicSearchAgent.ts` imports three modules whose implementations weren't included
-in the assignment doc: `formatChatHistoryAsString`, `computeSimilarity`, and
-`searchSearxng`. Standard implementations are provided (see the NOTE comment at the
-top of each file) — swap in the real project versions if they differ, particularly
-`searchSearxng`'s exact response shape from your actual SearXNG instance.
+## Suggestion generator wiring decision
 
-`imageSearchAgent.ts` wasn't given as a full file — only the anatomy pseudocode in
-section 2.1 — so it's reconstructed here in a form consistent with that pseudocode
-and with `videoSearchAgent.ts`'s required parity (section 2.2 table).
-
-## Section 4 — suggestionGeneratorAgent wiring decision
-
-Documented in the comment block at the bottom of `agents/suggestionGeneratorAgent.ts`:
-called from the **same route handler** as the triggering agent, right after its stream's
-`"end"` event, using the chat_history with the new AI response already appended —
-avoids a second HTTP round trip for the frontend to fetch suggestion chips.
-
-## Manual test cases (section 5)
-
-For each Group A agent (reddit/web/youtube) and `academicSearchAgent`:
-1. Normal question — e.g. `"What do people think about the new iPhone?"` — expect a
-   `sources` event followed by streamed `response` chunks, then `end`.
-2. `"hi"` — expect the retriever chain to hit `not_needed`, so `context` resolves to
-   an empty string and the answering chain still completes normally (no crash, no
-   sources).
-3. A follow-up with prior chat_history (e.g. `"what about the camera?"` after a
-   phone-review question) — expect the rephrase step to fold in context from
-   `chat_history` before searching.
-
-For `imageSearchAgent` / `videoSearchAgent` (Group B): same three cases via `.invoke()`,
-confirming case 2 (`"hi"`) is **not** specially handled — every input is searched, per
-section 2.2's note that neither agent has a `not_needed` branch.
+`suggestionGeneratorAgent` is exposed as its own separate endpoint (`/api/suggestions`), called by the frontend after an answer finishes streaming and the new AI message has been appended to chat history — keeping the main answer non-blocking.
