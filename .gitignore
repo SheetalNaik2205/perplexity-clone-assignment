@@ -1,3 +1,5 @@
 node_modules/
 .env
-searxng-settings.yml
+searxng-settings.yml 
+config-check.json
+youtube-check.json
