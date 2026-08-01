@@ -160,7 +160,7 @@ const createBasicYoutubeSearchRetrieverChain = (llm: BaseChatModel) => {
       const documents = res.results.map(
         (result) =>
           new Document({
-            pageContent: result.content ?? result.title,
+            pageContent: result.content || result.title,
             metadata: {
               title: result.title,
               url: result.url,

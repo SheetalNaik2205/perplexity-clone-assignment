@@ -42,11 +42,20 @@ To keep the **most similar** docs after `.filter(sim => sim.similarity > 0.5).sl
 
 ## Testing Results
 
-Manually tested via `src/test.ts`:
-- `webSearchAgent`: returned 15 sources and a streamed, cited answer for "What is React?"
-- `writingAssistantAgent`: returned a streamed response with no search, for a writing prompt
-- `imageSearchAgent`: tested via the running server's `/api/list` endpoint, returned 10 real image results for "cats"
-- Server health check (`/health`) and `/api/list` both confirmed working with real HTTP requests
+Manually tested via `src/test.ts`, one agent at a time:
+
+| Agent | Result |
+|---|---|
+| `webSearchAgent` | ✅ 15 sources, cited answer for "What is React?" |
+| `academicSearchAgent` | ✅ 10 sources, well-structured cited answer for "What is quantum entanglement?" |
+| `writingAssistantAgent` | ✅ Clean streamed response, no search, for a writing prompt |
+| `redditSearchAgent` | ⚠️ Returns 15 sources, but they read like general web content, not Reddit threads. Verified via direct `curl` to SearXNG that its `server-timing` header never lists a "reddit" engine, and `/config` confirms no engine named "reddit" is registered in this SearXNG install. SearXNG silently falls back to its default engines instead of erroring. This is a SearXNG installation limitation, not an app bug. |
+| `youtubeSearchAgent` | 🐛 **Bug found and fixed.** Initially returned 0 sources. Diagnosed via direct `curl` to SearXNG that YouTube results have `"content": ""` (empty string, not `null`). The code used `result.content ?? result.title`, and `??` only falls back on `null`/`undefined`, not empty strings — so empty content passed through and got filtered out later. Fixed by changing `??` to `\|\|`. Re-tested: now returns 15 sources correctly. |
+| `imageSearchAgent` | ✅ Real results confirmed via the running server's `/api/list` endpoint |
+| `videoSearchAgent` | ✅ 10 clean results, all required fields (`img_src`, `url`, `title`, `iframe_src`) present |
+| `suggestionGeneratorAgent` | ✅ 5 relevant, well-formed follow-up questions generated from chat history |
+
+**Summary:** 7/8 agents fully working as expected. 1 real bug found through testing and fixed (`youtubeSearchAgent`'s empty-string handling). 1 infrastructure limitation identified and documented (Reddit engine not available in this SearXNG installation).
 
 ## Suggestion generator wiring decision
 
