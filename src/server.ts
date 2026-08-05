@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { getLLM, getEmbeddings } from "./config/openai.js";
 import { dispatchSearch, dispatchList } from "./dispatch.js";
 import generateSuggestions from "./agents/suggestionGeneratorAgent.js";
@@ -6,6 +7,7 @@ import type { FocusMode, ListMode } from "./dispatch.js";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
