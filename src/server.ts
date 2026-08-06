@@ -5,6 +5,14 @@ import { dispatchSearch, dispatchList } from "./dispatch.js";
 import generateSuggestions from "./agents/suggestionGeneratorAgent.js";
 import type { FocusMode, ListMode } from "./dispatch.js";
 
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
 const app = express();
 app.use(express.json());
 app.use(cors());
