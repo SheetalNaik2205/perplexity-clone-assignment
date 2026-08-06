@@ -155,7 +155,12 @@ const createBasicWebSearchRetrieverChain = (llm: BaseChatModel) => {
 
       // Web search omits `engines` entirely so searxng falls back to its
       // configured default engine set, per the table in section 1.2.
-      const res = await searchSearxng(input, { language: "en" });
+      let res;
+      try {
+        res = await searchSearxng(input, { language: "en" });
+      } catch (err) {
+        return { query: input, docs: [] };
+      }
 
       const documents = res.results.map(
         (result) =>
