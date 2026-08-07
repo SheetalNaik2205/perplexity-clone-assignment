@@ -154,10 +154,15 @@ const createBasicRedditSearchRetrieverChain = (llm: BaseChatModel) => {
         return { query: "", docs: [] };
       }
 
-      const res = await searchSearxng(input, {
-        language: "en",
-        engines: ["reddit"],
-      });
+      let res;
+      try {
+        res = await searchSearxng(input, {
+          language: "en",
+          engines: ["reddit"],
+        });
+      } catch (err) {
+        return { query: input, docs: [] };
+      }
 
       const documents = res.results.map(
         (result) =>
