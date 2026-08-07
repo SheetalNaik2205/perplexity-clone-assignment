@@ -50,9 +50,14 @@ const createVideoSearchChain = (llm: BaseChatModel) => {
     llm,
     strParser,
     RunnableLambda.from(async (input: string) => {
-      const res = await searchSearxng(input, {
-        engines: ["youtube"],
-      });
+      let res;
+      try {
+        res = await searchSearxng(input, {
+          engines: ["youtube"],
+        });
+      } catch (err) {
+        return [];
+      }
 
       const videos: {
         img_src: string;

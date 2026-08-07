@@ -4,83 +4,275 @@
 <meta charset="UTF-8">
 <title>Perplexity Clone</title>
 <style>
-  body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f7f7f8; }
-  h1 { font-size: 24px; }
-  select, input, button { font-size: 16px; padding: 8px; margin: 5px 0; }
-  input { width: 70%; }
-  button { cursor: pointer; background: #10a37f; color: white; border: none; border-radius: 6px; padding: 8px 16px; }
-  #answer { background: white; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; min-height: 50px; }
-  #sources { font-size: 13px; color: #555; margin-top: 10px; }
-  .loading { color: #999; font-style: italic; }
+  :root {
+    --bg: #f5f6fa;
+    --card: #ffffff;
+    --accent: #10a37f;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 30px 20px 80px;
+  }
+  h1 { font-size: 26px; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+
+  .modes {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .mode-btn {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 8px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: 0.15s;
+  }
+  .mode-btn .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .mode-btn:hover { border-color: var(--accent); }
+  .mode-btn.active { border-color: var(--accent); background: #ecfdf5; color: var(--accent); }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  #query {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    font-size: 15px;
+  }
+  #query:focus { outline: none; border-color: var(--accent); }
+  #searchBtn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #searchBtn:hover { opacity: 0.9; }
+
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    letter-spacing: 0.03em;
+  }
+  #answer { white-space: pre-wrap; line-height: 1.6; font-size: 15px; }
+  .loading { color: var(--muted); font-style: italic; }
+
+  #sources-count { font-size: 13px; color: var(--muted); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .grid img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
+  .grid-item { font-size: 12px; }
+  .grid-item .title { margin-top: 4px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip {
+    background: #f3f4f6;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .chip:hover { background: #e5e7eb; }
+
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 
 <h1>🔍 Perplexity Clone</h1>
+<div class="subtitle">8 focus modes, one search box</div>
 
-<select id="focusMode">
-  <option value="webSearch">Web Search</option>
-  <option value="academicSearch">Academic Search</option>
-  <option value="redditSearch">Reddit Search</option>
-  <option value="youtubeSearch">YouTube Search</option>
-  <option value="writingAssistant">Writing Assistant</option>
-</select>
-<br>
-<input type="text" id="query" placeholder="Ask something...">
-<button onclick="doSearch()">Search</button>
+<div class="modes">
+  <div class="mode-btn active" data-mode="webSearch"><span class="icon">🌐</span>Web</div>
+  <div class="mode-btn" data-mode="academicSearch"><span class="icon">🎓</span>Academic</div>
+  <div class="mode-btn" data-mode="redditSearch"><span class="icon">💬</span>Reddit</div>
+  <div class="mode-btn" data-mode="youtubeSearch"><span class="icon">▶️</span>YouTube</div>
+  <div class="mode-btn" data-mode="writingAssistant"><span class="icon">✏️</span>Writing</div>
+  <div class="mode-btn" data-mode="imageSearch"><span class="icon">🖼️</span>Image</div>
+  <div class="mode-btn" data-mode="videoSearch"><span class="icon">🎥</span>Video</div>
+  <div class="mode-btn" data-mode="suggestion" style="opacity:0.5; cursor:default;"><span class="icon">💡</span>Suggestions*</div>
+</div>
 
-<div id="answer"></div>
-<div id="sources"></div>
+<div class="search-row">
+  <input type="text" id="query" placeholder="Ask something...">
+  <button id="searchBtn" onclick="doSearch()">Search</button>
+</div>
+
+<div class="card hidden" id="resultCard">
+  <div class="card-title" id="resultTitle">Answer</div>
+  <div id="answer"></div>
+  <div id="sources-count"></div>
+  <div id="imageGrid" class="grid hidden"></div>
+  <div id="suggestions" class="chips"></div>
+</div>
 
 <script>
 const BACKEND_URL = "https://perplexity-clone-assignment.onrender.com";
+let currentMode = "webSearch";
+let chatHistory = [];
+
+document.querySelectorAll(".mode-btn").forEach(btn => {
+  if (btn.dataset.mode === "suggestion") return;
+  btn.onclick = () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentMode = btn.dataset.mode;
+  };
+});
+
+document.getElementById("query").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") doSearch();
+});
 
 async function doSearch() {
-  const query = document.getElementById("query").value;
-  const focusMode = document.getElementById("focusMode").value;
-  const answerDiv = document.getElementById("answer");
-  const sourcesDiv = document.getElementById("sources");
+  const query = document.getElementById("query").value.trim();
+  if (!query) return;
 
-  answerDiv.textContent = "";
+  const card = document.getElementById("resultCard");
+  const answerDiv = document.getElementById("answer");
+  const sourcesDiv = document.getElementById("sources-count");
+  const imageGrid = document.getElementById("imageGrid");
+  const suggestionsDiv = document.getElementById("suggestions");
+  const title = document.getElementById("resultTitle");
+
+  card.classList.remove("hidden");
+  imageGrid.classList.add("hidden");
+  imageGrid.innerHTML = "";
+  suggestionsDiv.innerHTML = "";
   sourcesDiv.textContent = "";
+  title.textContent = currentMode;
+
+  if (currentMode === "imageSearch" || currentMode === "videoSearch") {
+    answerDiv.innerHTML = '<span class="loading">Searching... (first request may take up to 50s)</span>';
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/list`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: currentMode, query, history: chatHistory })
+      });
+      const json = await res.json();
+      answerDiv.textContent = "";
+      if (json.success && json.data.length > 0) {
+        imageGrid.classList.remove("hidden");
+        json.data.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "grid-item";
+          div.innerHTML = `<a href="${item.url}" target="_blank"><img src="${item.img_src}"></a><div class="title">${item.title}</div>`;
+          imageGrid.appendChild(div);
+        });
+      } else {
+        answerDiv.textContent = "No results found.";
+      }
+    } catch (e) {
+      answerDiv.textContent = "Something went wrong. Please try again.";
+    }
+    return;
+  }
+
   answerDiv.innerHTML = '<span class="loading">Thinking... (first request may take up to 50 seconds)</span>';
 
-  const response = await fetch(`${BACKEND_URL}/api/search`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ focusMode, query, history: [] })
-  });
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ focusMode: currentMode, query, history: chatHistory })
+    });
 
-  answerDiv.textContent = "";
+    answerDiv.textContent = "";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let fullAnswer = "";
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop();
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-
-    const parts = buffer.split("\n\n");
-    buffer = parts.pop();
-
-    for (const part of parts) {
-      if (!part.startsWith("data:")) continue;
-      const jsonStr = part.replace("data:", "").trim();
-      if (!jsonStr || jsonStr === "{}") continue;
-
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.type === "sources") {
-          sourcesDiv.textContent = `Found ${parsed.data.length} sources`;
-        }
-        if (parsed.type === "response") {
-          answerDiv.textContent += parsed.data;
-        }
-      } catch (e) {}
+      for (const part of parts) {
+        if (!part.startsWith("data:")) continue;
+        const jsonStr = part.replace("data:", "").trim();
+        if (!jsonStr || jsonStr === "{}") continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          if (parsed.type === "sources") {
+            sourcesDiv.textContent = `Found ${parsed.data.length} sources`;
+          }
+          if (parsed.type === "response") {
+            fullAnswer += parsed.data;
+            answerDiv.textContent = fullAnswer;
+          }
+        } catch (e) {}
+      }
     }
+
+    chatHistory.push({ role: "user", content: query });
+    chatHistory.push({ role: "assistant", content: fullAnswer });
+    loadSuggestions();
+  } catch (e) {
+    answerDiv.textContent = "Something went wrong. Please try again.";
   }
+}
+
+async function loadSuggestions() {
+  const suggestionsDiv = document.getElementById("suggestions");
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/suggestions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history: chatHistory })
+    });
+    const json = await res.json();
+    if (json.success) {
+      json.data.forEach(s => {
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = s;
+        chip.onclick = () => { document.getElementById("query").value = s; doSearch(); };
+        suggestionsDiv.appendChild(chip);
+      });
+    }
+  } catch (e) {}
 }
 </script>
 
