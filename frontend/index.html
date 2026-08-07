@@ -5,111 +5,61 @@
 <title>Perplexity Clone</title>
 <style>
   :root {
-    --bg: #f5f6fa;
-    --card: #ffffff;
-    --accent: #10a37f;
-    --text: #1a1a1a;
-    --muted: #6b7280;
-    --border: #e5e7eb;
+    --bg: #f5f6fa; --card: #ffffff; --accent: #a855c7;
+    --text: #1a1a1a; --muted: #6b7280; --border: #e5e7eb;
   }
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 30px 20px 80px;
+    background: var(--bg); color: var(--text);
+    max-width: 820px; margin: 0 auto; padding: 30px 20px 80px;
   }
   h1 { font-size: 26px; margin-bottom: 4px; }
   .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
 
+  .section-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.03em; }
+
   .modes {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
   .mode-btn {
-    background: var(--card);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 8px;
-    text-align: center;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
-    transition: 0.15s;
+    background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+    padding: 12px 6px; text-align: center; cursor: pointer;
+    font-size: 12px; font-weight: 600; color: var(--muted); transition: 0.15s;
   }
-  .mode-btn .icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .mode-btn .icon { font-size: 20px; display: block; margin-bottom: 4px; }
   .mode-btn:hover { border-color: var(--accent); }
-  .mode-btn.active { border-color: var(--accent); background: #ecfdf5; color: var(--accent); }
+  .mode-btn.active { border-color: #c894e0; background: #f7eefb; color: #a855c7; }
 
-  .search-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
-  #query {
-    flex: 1;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 2px solid var(--border);
-    font-size: 15px;
-  }
+  .search-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  #query { flex: 1; padding: 14px 16px; border-radius: 10px; border: 2px solid var(--border); font-size: 15px; }
   #query:focus { outline: none; border-color: var(--accent); }
-  #searchBtn {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 0 24px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-  }
+  #searchBtn { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 0 24px; font-size: 15px; font-weight: 600; cursor: pointer; }
   #searchBtn:hover { opacity: 0.9; }
 
-  .card {
-    background: var(--card);
-    border-radius: 14px;
-    padding: 22px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    margin-bottom: 16px;
+  .extras-row { display: flex; gap: 8px; margin-bottom: 24px; }
+  .extra-btn {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--muted); font-weight: 600;
   }
-  .card-title {
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-    letter-spacing: 0.03em;
-  }
+  .extra-btn.active { border-color: var(--accent); color: var(--accent); background: #ecfdf5; }
+
+  .card { background: var(--card); border-radius: 14px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; letter-spacing: 0.03em; }
   #answer { white-space: pre-wrap; line-height: 1.6; font-size: 15px; }
   .loading { color: var(--muted); font-style: italic; }
-
   #sources-count { font-size: 13px; color: var(--muted); margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .grid img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
   .grid-item { font-size: 12px; }
   .grid-item .title { margin-top: 4px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-  .chip {
-    background: #f3f4f6;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 8px 14px;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--text);
-  }
+  .chip { background: #f3f4f6; border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; font-size: 13px; cursor: pointer; color: var(--text); }
   .chip:hover { background: #e5e7eb; }
 
   .hidden { display: none; }
@@ -118,22 +68,25 @@
 <body>
 
 <h1>🔍 Perplexity Clone</h1>
-<div class="subtitle">8 focus modes, one search box</div>
+<div class="subtitle">5 focus modes + image/video search</div>
 
+<div class="section-label">Focus Mode</div>
 <div class="modes">
   <div class="mode-btn active" data-mode="webSearch"><span class="icon">🌐</span>Web</div>
   <div class="mode-btn" data-mode="academicSearch"><span class="icon">🎓</span>Academic</div>
   <div class="mode-btn" data-mode="redditSearch"><span class="icon">💬</span>Reddit</div>
   <div class="mode-btn" data-mode="youtubeSearch"><span class="icon">▶️</span>YouTube</div>
   <div class="mode-btn" data-mode="writingAssistant"><span class="icon">✏️</span>Writing</div>
-  <div class="mode-btn" data-mode="imageSearch"><span class="icon">🖼️</span>Image</div>
-  <div class="mode-btn" data-mode="videoSearch"><span class="icon">🎥</span>Video</div>
-  <div class="mode-btn" data-mode="suggestion" style="opacity:0.5; cursor:default;"><span class="icon">💡</span>Suggestions*</div>
 </div>
 
 <div class="search-row">
   <input type="text" id="query" placeholder="Ask something...">
   <button id="searchBtn" onclick="doSearch()">Search</button>
+</div>
+
+<div class="extras-row">
+  <div class="extra-btn" id="imgToggle" onclick="toggleExtra('imageSearch')">🖼️ Search Images Instead</div>
+  <div class="extra-btn" id="vidToggle" onclick="toggleExtra('videoSearch')">🎥 Search Videos Instead</div>
 </div>
 
 <div class="card hidden" id="resultCard">
@@ -147,16 +100,25 @@
 <script>
 const BACKEND_URL = "https://perplexity-clone-assignment.onrender.com";
 let currentMode = "webSearch";
+let extraMode = null;
 let chatHistory = [];
 
 document.querySelectorAll(".mode-btn").forEach(btn => {
-  if (btn.dataset.mode === "suggestion") return;
   btn.onclick = () => {
     document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     currentMode = btn.dataset.mode;
+    extraMode = null;
+    document.getElementById("imgToggle").classList.remove("active");
+    document.getElementById("vidToggle").classList.remove("active");
   };
 });
+
+function toggleExtra(mode) {
+  extraMode = (extraMode === mode) ? null : mode;
+  document.getElementById("imgToggle").classList.toggle("active", extraMode === "imageSearch");
+  document.getElementById("vidToggle").classList.toggle("active", extraMode === "videoSearch");
+}
 
 document.getElementById("query").addEventListener("keydown", (e) => {
   if (e.key === "Enter") doSearch();
@@ -178,15 +140,15 @@ async function doSearch() {
   imageGrid.innerHTML = "";
   suggestionsDiv.innerHTML = "";
   sourcesDiv.textContent = "";
-  title.textContent = currentMode;
 
-  if (currentMode === "imageSearch" || currentMode === "videoSearch") {
+  if (extraMode) {
+    title.textContent = extraMode === "imageSearch" ? "Images" : "Videos";
     answerDiv.innerHTML = '<span class="loading">Searching... (first request may take up to 50s)</span>';
     try {
       const res = await fetch(`${BACKEND_URL}/api/list`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: currentMode, query, history: chatHistory })
+        body: JSON.stringify({ mode: extraMode, query, history: chatHistory })
       });
       const json = await res.json();
       answerDiv.textContent = "";
@@ -207,6 +169,7 @@ async function doSearch() {
     return;
   }
 
+  title.textContent = currentMode;
   answerDiv.innerHTML = '<span class="loading">Thinking... (first request may take up to 50 seconds)</span>';
 
   try {
